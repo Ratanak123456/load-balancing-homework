@@ -1,0 +1,20 @@
+[Unit]
+Description=React Application Static Server
+After=network.target
+
+[Service]
+Type=simple
+User=reactapp
+Group=reactapp
+WorkingDirectory=/opt/react-app/current
+ExecStart=/usr/bin/node /opt/react-app/current/server.mjs
+Environment=NODE_ENV=production
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
