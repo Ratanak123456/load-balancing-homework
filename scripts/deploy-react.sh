@@ -91,6 +91,9 @@ deploy() {
         exit 1
     fi
 
+    node --check "$release_dir/server.mjs"
+    systemd-analyze verify "$SERVICE_FILE"
+
     log "Installing the systemd service..."
 
     install -m 0644 "$SERVICE_FILE" \
@@ -107,6 +110,7 @@ deploy() {
     log "Checking application health..."
 
     curl --fail --silent --show-error \
+        --noproxy '*' \
         --retry 10 \
         --retry-connrefused \
         --retry-delay 1 \

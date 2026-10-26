@@ -124,6 +124,8 @@ Vagrant.configure("2") do |config|
       vb.memory = 1024
       vb.cpus = 1
       vb.gui = false
+      # Work around the observed warm-reboot clock/boot hang on this host.
+      vb.customize ["modifyvm", :id, "--paravirt-provider", "minimal"]
     end
   end
 
@@ -144,13 +146,13 @@ Vagrant.configure("2") do |config|
   end
 
   # Install basic tools on every VM.
-  config.vm.provision "shell", inline: <<-SHELL
-    set -eu
-    export DEBIAN_FRONTEND=noninteractive
+  config.vm.provision "shell", path: "scripts/provision.sh"
 
-    apt-get update
-    apt-get install -y curl ca-certificates iputils-ping
-  SHELL
+  # Check only this lab's host-only DHCP conflict before starting VMs.
+  config.trigger.before :up do |trigger|
+    trigger.name = "Prepare lab host-only network"
+    trigger.run = { path: File.join(__dir__, "scripts", "prepare-host.sh") }
+  end
 
   # Keepalived will manage the floating IP 192.168.56.100 later.
   # Do not assign that address to a VM here.

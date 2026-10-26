@@ -13,13 +13,13 @@ const serverName = os.hostname().toUpperCase();
 // The built JavaScript and CSS stay identical on both servers.
 const nameJSON = JSON.stringify(serverName).replace(/</g, '\\u003c');
 
-const html = readFileSync(
+const htmlTemplate = readFileSync(
   path.join(distDirectory, 'index.html'),
   'utf8'
-).replace(
-  '<head>',
-  `<head><script>window.__SERVER_NAME__ = ${nameJSON};</script>`
 );
+if (!htmlTemplate.includes('<head>')) {
+  throw new Error('Built HTML must contain <head> for server identity injection');
+}
 
 app.disable('x-powered-by');
 
@@ -34,8 +34,24 @@ app.get('/health', (req, res) => {
 });
 
 app.get(['/', '/index.html'], (req, res) => {
+  // Inject for this document response before Vite's module entry script.
+  const html = htmlTemplate.replace(
+    '<head>',
+    `<head><script>window.__SERVER_NAME__ = ${nameJSON};</script>`
+  );
   res.type('html').send(html);
 });
+
+// Vite fingerprints these files; both backends serve identical bytes.
+// Override the dynamic-response policy only for successful asset responses.
+app.use('/assets', express.static(path.join(distDirectory, 'assets'), {
+  index: false,
+  maxAge: '1y',
+  immutable: true,
+  setHeaders(res) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  },
+}));
 
 app.use(express.static(distDirectory, { index: false }));
 

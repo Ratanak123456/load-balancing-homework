@@ -39,17 +39,22 @@ install_dependencies() {
     apt-get update
     apt-get install -y curl ca-certificates build-essential
 
-    local setup_file
-    setup_file="$(mktemp)"
+    if command -v node >/dev/null && command -v npm >/dev/null &&
+       [[ "$(node -p 'process.versions.node.split(".")[0]')" == "$NODE_MAJOR" ]]; then
+        log "Node.js $NODE_MAJOR and npm are already installed."
+    else
+        local setup_file
+        setup_file="$(mktemp)"
 
-    curl -fsSL \
-        "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" \
-        -o "$setup_file"
+        curl --retry 3 -fsSL \
+            "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" \
+            -o "$setup_file"
 
-    bash "$setup_file"
-    rm -f "$setup_file"
+        bash "$setup_file"
+        rm -f "$setup_file"
 
-    apt-get install -y nodejs
+        apt-get install -y nodejs
+    fi
 
     log "Installed Node.js: $(node --version)"
     log "Installed npm: $(npm --version)"

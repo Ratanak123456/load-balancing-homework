@@ -1,4 +1,4 @@
-// Change this to 'WEB-02' when deploying to your second server.
+// Express supplies the hostname at runtime so both servers share one asset build.
 const SERVER_NAME = window.__SERVER_NAME__ || 'LOCAL DEV'
 const drinks = [
   { name: 'Classic Espresso', note: 'Small cup. Big character.', description: 'A rich, full-bodied shot with notes of dark chocolate and a golden crema.', price: '3.00', type: 'espresso', tag: 'THE ORIGINAL' },
